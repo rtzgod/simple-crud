@@ -18,7 +18,11 @@ func main() {
 
 	log := logger.SetupLogger(cfg.Env)
 
-	db := repository.NewPostgres(cfg.Postgres.Url)
+	db, err := repository.NewPostgres(cfg.Postgres.Url)
+	if err != nil {
+		log.Error("Failed to connect to database", logger.Err(err))
+		os.Exit(1)
+	}
 
 	repo := repository.NewRepository(db)
 

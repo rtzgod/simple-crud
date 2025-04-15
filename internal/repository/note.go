@@ -54,16 +54,44 @@ func (r *Repository) GetNotes() ([]models.Note, error) {
 
 	return notes, nil
 }
+
 func (r *Repository) UpdateNote(id int, title, content string) error {
-	stmt, err := r.db.Prepare("UPDATE notes SET title = $1, content = $2 WHERE id = $3")
+	var query string
+	var args []interface{}
+
+	// Create dynamic query based on which fields are provided
+	if title != "" && content != "" {
+		query = "UPDATE notes SET title = $1, content = $2 WHERE id = $3"
+		args = []interface{}{title, content, id}
+	} else if title != "" {
+		query = "UPDATE notes SET title = $1 WHERE id = $2"
+		args = []interface{}{title, id}
+	} else if content != "" {
+		query = "UPDATE notes SET content = $1 WHERE id = $2"
+		args = []interface{}{content, id}
+	} else {
+		return nil // Nothing to update
+	}
+
+	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(title, content, id)
+	result, err := stmt.Exec(args...)
 	if err != nil {
 		return err
+	}
+
+	// Check if any row was affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("заметка не найдена")
 	}
 
 	return nil

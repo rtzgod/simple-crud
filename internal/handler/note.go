@@ -69,11 +69,6 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if note.Title == "" || note.Content == "" {
-		http.Error(w, "Title and Content are required", http.StatusBadRequest)
-		return
-	}
-
 	err = h.service.UpdateNote(noteID, note.Title, note.Content)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
